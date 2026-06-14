@@ -3,16 +3,15 @@
   "description": "CheatSheet for Codenames",
   "version": "0.1",
   "manifest_version": 3,
-  "permissions": ["activeTab"],
+  "permissions": ["tabs", "activeTab", "scripting"],
   "action": {
-    "default_popup": "index.html",
-    "default_icon": "logo.png"
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
   },
   "content_scripts": [
     {
-      "matches": ["*://codesolo.win/*", "*://codesolo.ru/*", "*://horsepaste.com/*", "*://*/*"],
-      "js": ["scripts/website/content.js"],
-      "run_at": "document_end"
+      "matches": ["*://codesolo.win/*", "*://codesolo.ru/*"],
+      "js": ["content.js"]
     }
   ]
 }
