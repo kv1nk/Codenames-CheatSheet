@@ -3,7 +3,7 @@
   "description": "CheatSheet for Codenames",
   "version": "0.1",
   "manifest_version": 3,
-  "permissions": ["tabs", "activeTab", "scripting"],
+  "permissions": ["tabs", "activeTab", "scripting", "storage"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": "icon.png"
@@ -12,6 +12,12 @@
     {
       "matches": ["*://codesolo.win/*", "*://codesolo.ru/*"],
       "js": ["content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"],
+      "matches": ["*://codesolo.win/*", "*://codesolo.ru/*"]
     }
   ]
 }
