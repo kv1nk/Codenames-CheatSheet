@@ -5,13 +5,13 @@
   "manifest_version": 3,
   "permissions": ["tabs", "activeTab", "scripting"],
   "action": {
-    "default_popup": "popup.html",
+    "default_popup": "popup/popup.html",
     "default_icon": "icon.png"
   },
   "content_scripts": [
     {
       "matches": ["*://codesolo.win/*", "*://codesolo.ru/*"],
-      "js": ["content.js"]
+      "js": ["website/content.js"]
     }
   ]
 }
