@@ -26,7 +26,6 @@ class GameType {
 
 class GameMode {
   constructor() {
-    this.gameType = new GameType();
     this.currentGameMode = null;
     this.listenChange = false;
     this.select = document.querySelector(
@@ -36,7 +35,7 @@ class GameMode {
   }
 
   getGameMode() {
-    return this.gameType ? GameType.getType(this.select.textContent) : null;
+    return GameType.getType(this.select.textContent) || null;
   }
 
   setGameMode() {
