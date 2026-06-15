@@ -64,5 +64,3 @@ class CodeMode {
     this.currentGameMode = this.getGameMode();
   }
 }
-
-const codeMode = new CodeMode();
