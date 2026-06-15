@@ -1,4 +1,4 @@
-class GameType {
+class CodeGameTypes {
   constructor() {
     this.standard = { name: "Стандартный" };
     this.gadgets = { name: "Гаджеты" };
@@ -8,7 +8,7 @@ class GameType {
   }
 
   static getType(name) {
-    const instance = new GameType();
+    const instance = new CodeGameTypes();
 
     if (instance[name]) {
       return instance[name];
@@ -24,7 +24,7 @@ class GameType {
   }
 }
 
-class GameMode {
+class CodeMode {
   constructor() {
     this.currentGameMode = null;
     this.listenChange = false;
@@ -35,7 +35,7 @@ class GameMode {
   }
 
   getGameMode() {
-    return GameType.getType(this.select.textContent) || null;
+    return CodeGameTypes.getType(this.select.textContent) || null;
   }
 
   setGameMode() {
@@ -65,4 +65,4 @@ class GameMode {
   }
 }
 
-const gameMode = new GameMode();
+const codeMode = new CodeMode();
