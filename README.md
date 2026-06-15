@@ -1,1 +1,1 @@
-# Codenames-CheatSheat
+# Codenames-CheatSheet
