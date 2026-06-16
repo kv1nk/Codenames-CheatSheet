@@ -7,7 +7,7 @@ class Scroll {
     document.addEventListener(
       "wheel",
       (e) => {
-        if (!this.disableScroll) {
+        if (!this.disableScroll && gameChecker.isGamePage) {
           e.preventDefault();
           e.stopImmediatePropagation();
         }
