@@ -1,3 +1,6 @@
+/**
+ * Типы игр
+ */
 class CodeGameTypes {
   constructor() {
     this.standard = { name: "Стандартный" };
@@ -7,6 +10,9 @@ class CodeGameTypes {
     this.captainChallenge = { name: "Капитан-челлендж" };
   }
 
+  /**
+   * Функция для получения типа игры по названию
+   */
   static getType(name) {
     const instance = new CodeGameTypes();
 
@@ -24,44 +30,106 @@ class CodeGameTypes {
   }
 }
 
+/**
+ * Класс для определения типа игры
+ */
 class CodeMode {
   constructor() {
     this.currentGameMode = null;
-    this.listenChange = false;
-    this.select = document.querySelector(
+    this.select = null;
+    this.init();
+  }
+
+  /**
+   * Найти элемент определяющий тип игры
+   */
+  findSelect() {
+    return document.querySelector(
       "span.text-xs.font-semibold.text-gray-400.bg-gray-800\\/80.border.border-gray-700.rounded-full.px-2\\.5.py-1",
     );
-    this.initListener();
   }
 
+  /**
+   * Получить тип игры
+   */
   getGameMode() {
-    return CodeGameTypes.getType(this.select.textContent) || null;
+    if (!this.select) return null;
+    return CodeGameTypes.getType(this.select.textContent.trim()) || null;
   }
 
-  setGameMode() {
-    const newGameMode = this.getGameMode();
-    this.currentGameMode = newGameMode;
-    return newGameMode;
+  /**
+   * Обновить тип игры
+   */
+  updateGameMode() {
+    this.currentGameMode = this.getGameMode();
+    return this.currentGameMode;
   }
 
-  initListener() {
-    if (this.select) {
-      const observer = new MutationObserver(() => {
-        if (this.listenChange) {
-          this.onGameModeChange();
+  /**
+   * Сбросить состояние
+   */
+  resetState() {
+    this.select = null;
+    this.currentGameMode = null;
+  }
+
+  /**
+   * Инициализировать обновления
+   */
+  init() {
+    gameChecker.on(
+      (checker) => checker.isGamePage === true && checker.isStarted === false,
+      () => {
+        this.select = this.findSelect();
+        if (this.select) {
+          this.updateGameMode();
+          this.initSelectObserver();
         }
-      });
+      },
+    );
 
-      observer.observe(this.select, {
-        childList: true,
-        characterData: true,
-        subtree: true,
-      });
+    gameChecker.on(
+      (checker) => checker.isStarted === true,
+      () => {
+        if (this.select) {
+          this.updateGameMode();
+        }
+      },
+    );
+
+    gameChecker.on(
+      (checker) => checker.isGamePage === false,
+      () => {
+        this.resetState();
+      },
+    );
+
+    if (gameChecker.isGamePage) {
+      this.select = this.findSelect();
+      if (this.select) {
+        this.updateGameMode();
+        this.initSelectObserver();
+      }
     }
   }
 
-  onGameModeChange() {
-    this.currentGameMode = this.getGameMode();
+  /**
+   * Следить за обновление типа игры
+   */
+  initSelectObserver() {
+    if (!this.select) return;
+
+    const observer = new MutationObserver(() => {
+      if (gameChecker && gameChecker.isStarted) {
+        this.updateGameMode();
+      }
+    });
+
+    observer.observe(this.select, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
   }
 }
 
