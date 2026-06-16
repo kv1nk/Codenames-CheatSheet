@@ -1,9 +1,9 @@
 const style = document.createElement("style");
 style.textContent = `
   :root {
-    --code-span-margin-top: -10px;
-    --code-span-margin-left: -10px;
-    --code-button-overflow: visible;
+    --code-span-margin-top: 0px;
+    --code-span-margin-left: 0px;
+    --code-button-overflow: hidden;
   }
 
   span:has(svg circle[r="7.5"]) {
