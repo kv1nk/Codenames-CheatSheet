@@ -19,7 +19,7 @@ document.head.appendChild(style);
 
 const root = document.documentElement;
 
-function changedMinesPosition(dx, dy, showOut) {
+function changedMinesPosition(dx = 0, dy = 0, showOut = false) {
   root.style.setProperty("--code-span-margin-left", dx + "px");
   root.style.setProperty("--code-span-margin-top", dy + "px");
   root.style.setProperty("--code-button-overflow", showOut ? "visible" : "hidden");
