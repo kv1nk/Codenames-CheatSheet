@@ -7,10 +7,10 @@ class UserInterface {
   addCategory(category) {
     category.ui = this;
 
-    category.elements.forEach((element) => {
-      element.ui = this;
-      element.category = category;
-      this.loadElementValue(element);
+    category.elements.forEach((el) => {
+      el.ui = this;
+      el.category = category;
+      this.loadElementValue(el);
     });
 
     this.categories.push(category);
@@ -25,12 +25,9 @@ class UserInterface {
   }
 
   loadElementValue(element) {
-    if (!element.id) {
-      return;
-    }
+    if (!element.id) return;
 
     const settings = this.getSavedSettings();
-
     const categoryData = settings[element.category?.name];
 
     if (categoryData && Object.prototype.hasOwnProperty.call(categoryData, element.id)) {
@@ -45,21 +42,19 @@ class UserInterface {
   saveSettings() {
     const result = {};
 
-    this.categories.forEach((category) => {
-      const categoryValues = {};
+    this.categories.forEach((cat) => {
+      const values = {};
 
-      category.elements.forEach((element) => {
-        if (!element.id) {
-          return;
-        }
+      cat.elements.forEach((el) => {
+        if (!el.id) return;
 
-        if (element.value !== element.defaultValue) {
-          categoryValues[element.id] = element.value;
+        if (el.value !== el.defaultValue) {
+          values[el.id] = el.value;
         }
       });
 
-      if (Object.keys(categoryValues).length > 0) {
-        result[category.name] = categoryValues;
+      if (Object.keys(values).length) {
+        result[cat.name] = values;
       }
     });
 
@@ -67,64 +62,81 @@ class UserInterface {
   }
 
   getValues() {
-    const result = {};
+    const res = {};
 
-    this.categories.forEach((category) => {
-      result[category.name] = category.getValues();
+    this.categories.forEach((cat) => {
+      res[cat.name] = cat.getValues();
     });
 
-    return result;
+    return res;
   }
 
   render() {
     const gui = document.getElementById("GUI");
-
     gui.innerHTML = "";
 
-    this.categories.forEach((category) => {
-      category.render(gui);
-    });
+    this.categories.forEach((cat) => cat.render(gui));
   }
 }
 
 class Category {
-  constructor(name) {
+  constructor(name, opened = false) {
     this.name = name;
+    this.opened = opened;
     this.elements = [];
   }
 
-  addInteractiveElement(element) {
-    element.category = this;
-
-    this.elements.push(element);
+  addInteractiveElement(el) {
+    el.category = this;
+    this.elements.push(el);
+    return this;
   }
 
   getValues() {
-    const values = {};
+    const res = {};
 
-    this.elements.forEach((element) => {
-      values[element.name] = element.getValue();
+    this.elements.forEach((el) => {
+      res[el.name] = el.getValue();
     });
 
-    return values;
+    return res;
   }
 
   render(container) {
-    const categoryContainer = document.createElement("div");
+    const wrapper = document.createElement("div");
+    wrapper.className = "category";
 
-    categoryContainer.className = "category";
+    const header = document.createElement("button");
+    header.className = "category-header";
 
-    const title = document.createElement("h3");
-
+    const title = document.createElement("span");
     title.textContent = this.name;
 
-    categoryContainer.appendChild(title);
+    const arrow = document.createElement("span");
+    arrow.className = "category-arrow";
+    arrow.textContent = "▼";
 
-    this.elements.forEach((element) => {
-      element.render(categoryContainer);
+    const content = document.createElement("div");
+    content.className = "category-content";
+
+    if (this.opened) {
+      content.classList.add("open");
+      arrow.classList.add("open");
+    }
+
+    header.append(title, arrow);
+
+    header.addEventListener("click", () => {
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
     });
 
-    container.appendChild(categoryContainer);
+    this.elements.forEach((el) => {
+      el.render(content);
+    });
+
+    wrapper.append(header, content);
+    container.appendChild(wrapper);
   }
 }
 
@@ -132,23 +144,19 @@ class InteractiveObject {
   constructor({ id = null, name, defaultValue = null, onChange = null, callOnLoad = true }) {
     this.id = id;
     this.name = name;
-
     this.value = defaultValue;
     this.defaultValue = defaultValue;
-
     this.onChange = onChange;
     this.callOnLoad = callOnLoad;
   }
 
-  setValue(value) {
-    this.value = value;
+  setValue(v) {
+    this.value = v;
 
-    if (this.ui) {
-      this.ui.saveSettings();
-    }
+    if (this.ui) this.ui.saveSettings();
 
     if (typeof this.onChange === "function") {
-      this.onChange(value, this);
+      this.onChange(v, this);
     }
   }
 
@@ -164,29 +172,31 @@ class InteractiveObject {
 }
 
 class Toggle extends InteractiveObject {
-  constructor(options) {
-    super(options);
-  }
-
   render(container) {
-    const wrapper = document.createElement("div");
+    const row = document.createElement("div");
+    row.className = "setting-row";
 
-    const label = document.createElement("label");
+    const label = document.createElement("span");
+    label.className = "setting-label";
+    label.textContent = this.name;
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = this.value;
+    const sw = document.createElement("label");
+    sw.className = "switch";
 
-    checkbox.addEventListener("change", () => {
-      this.setValue(checkbox.checked);
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = this.value;
+
+    const slider = document.createElement("span");
+    slider.className = "switch-slider";
+
+    input.addEventListener("change", () => {
+      this.setValue(input.checked);
     });
 
-    label.appendChild(checkbox);
-    label.append(this.name);
-
-    wrapper.appendChild(label);
-
-    container.appendChild(wrapper);
+    sw.append(input, slider);
+    row.append(label, sw);
+    container.appendChild(row);
   }
 }
 
@@ -196,67 +206,64 @@ class Slider extends InteractiveObject {
 
     this.min = options.min;
     this.max = options.max;
+    this.step = options.step ?? 1;
     this.allowInput = options.allowInput ?? false;
   }
 
   render(container) {
     const wrapper = document.createElement("div");
+    wrapper.className = "slider-wrapper";
 
-    const title = document.createElement("div");
+    const header = document.createElement("div");
+    header.className = "slider-header";
+
+    const title = document.createElement("span");
     title.textContent = this.name;
+
+    header.append(title);
 
     const slider = document.createElement("input");
     slider.type = "range";
+    slider.className = "slider-input";
     slider.min = this.min;
     slider.max = this.max;
+    slider.step = this.step;
     slider.value = this.value;
 
-    wrapper.appendChild(title);
-
     let numberInput = null;
+    let valueLabel = null;
 
     if (this.allowInput) {
       numberInput = document.createElement("input");
-
+      numberInput.className = "slider-number";
       numberInput.type = "number";
       numberInput.value = this.value;
 
+      header.append(numberInput);
+
       numberInput.addEventListener("input", () => {
-        const value = Number(numberInput.value);
-
-        this.setValue(value);
-        slider.value = value;
+        const v = Number(numberInput.value);
+        slider.value = v;
+        this.setValue(v);
       });
-
-      wrapper.appendChild(numberInput);
-      wrapper.appendChild(document.createElement("br"));
     } else {
-      const valueLabel = document.createElement("span");
+      valueLabel = document.createElement("span");
+      valueLabel.className = "slider-value";
       valueLabel.textContent = this.value;
 
-      slider.addEventListener("input", () => {
-        const value = Number(slider.value);
-
-        this.setValue(value);
-        valueLabel.textContent = value;
-      });
-
-      wrapper.appendChild(valueLabel);
-      wrapper.appendChild(document.createElement("br"));
+      header.append(valueLabel);
     }
 
     slider.addEventListener("input", () => {
-      const value = Number(slider.value);
+      const v = Number(slider.value);
 
-      this.setValue(value);
+      if (numberInput) numberInput.value = v;
+      if (valueLabel) valueLabel.textContent = v;
 
-      if (numberInput) {
-        numberInput.value = value;
-      }
+      this.setValue(v);
     });
 
-    wrapper.appendChild(slider);
-
+    wrapper.append(header, slider);
     container.appendChild(wrapper);
   }
 }
@@ -265,40 +272,36 @@ class DropdownMenu extends InteractiveObject {
   constructor(options) {
     super({
       ...options,
-      defaultValue: options.defaultValue ?? options.options?.[0] ?? null,
+      defaultValue: options.defaultValue ?? options.options?.[0],
     });
 
     this.options = options.options ?? [];
   }
 
   render(container) {
-    const wrapper = document.createElement("div");
+    const row = document.createElement("div");
+    row.className = "setting-row";
 
-    const label = document.createElement("div");
+    const label = document.createElement("span");
+    label.className = "setting-label";
     label.textContent = this.name;
 
     const select = document.createElement("select");
+    select.className = "setting-select";
 
-    this.options.forEach((option) => {
-      const optionElement = document.createElement("option");
-
-      optionElement.value = option;
-      optionElement.textContent = option;
-
-      if (option === this.value) {
-        optionElement.selected = true;
-      }
-
-      select.appendChild(optionElement);
+    this.options.forEach((opt) => {
+      const o = document.createElement("option");
+      o.value = opt;
+      o.textContent = opt;
+      if (opt === this.value) o.selected = true;
+      select.appendChild(o);
     });
 
     select.addEventListener("change", () => {
       this.setValue(select.value);
     });
 
-    wrapper.appendChild(label);
-    wrapper.appendChild(select);
-
-    container.appendChild(wrapper);
+    row.append(label, select);
+    container.appendChild(row);
   }
 }
