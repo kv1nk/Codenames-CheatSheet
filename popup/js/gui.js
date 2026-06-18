@@ -2,6 +2,7 @@ class UserInterface {
   constructor() {
     this.categories = [];
     this.storageKey = "savedSettings";
+    this.openedCategoryKey = "openedCategory";
   }
 
   addCategory(category) {
@@ -22,6 +23,41 @@ class UserInterface {
     } catch {
       return {};
     }
+  }
+
+  getOpenedCategories() {
+    try {
+      return JSON.parse(localStorage.getItem(this.openedCategoryKey) || '{"timestamp":0,"categories":[]}');
+    } catch {
+      return {
+        timestamp: 0,
+        categories: [],
+      };
+    }
+  }
+
+  saveOpenedCategories() {
+    const opened = this.categories.filter((cat) => cat.opened).map((cat) => cat.name);
+
+    localStorage.setItem(
+      this.openedCategoryKey,
+      JSON.stringify({
+        timestamp: Date.now(),
+        categories: opened,
+      }),
+    );
+  }
+
+  loadOpenedCategories() {
+    const data = this.getOpenedCategories();
+
+    if (Date.now() - data.timestamp > 60 * 60 * 1000) {
+      return;
+    }
+
+    this.categories.forEach((cat) => {
+      cat.opened = data.categories.includes(cat.name);
+    });
   }
 
   loadElementValue(element) {
@@ -72,6 +108,8 @@ class UserInterface {
   }
 
   render() {
+    this.loadOpenedCategories();
+
     const gui = document.getElementById("GUI");
     gui.innerHTML = "";
 
@@ -127,8 +165,14 @@ class Category {
     header.append(title, arrow);
 
     header.addEventListener("click", () => {
+      this.opened = !this.opened;
+
       content.classList.toggle("open");
       arrow.classList.toggle("open");
+
+      if (this.ui) {
+        this.ui.saveOpenedCategories();
+      }
     });
 
     this.elements.forEach((el) => {
